@@ -567,3 +567,40 @@ body{display:flex;align-items:flex-start;justify-content:center;background:#F2F4
   .logo-section{align-items:center}
   .header-text{padding-right:24px}
 }
+
+/* Responsive improvements for small screens */
+@media (max-width:880px){
+  body{padding-bottom:24px}
+  .logo-placeholder.large{width:120px;height:120px}
+  .logo-placeholder{width:88px;height:88px}
+  .logo-section{gap:8px;padding:0 12px}
+  .header-text{display:none}
+
+  /* Tabs become horizontally scrollable pills */
+  .tabs{overflow-x:auto;padding:12px 10px;margin-bottom:22px}
+  .tabs::-webkit-scrollbar{height:8px}
+  .tabs::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:8px}
+  .tab{flex:0 0 auto;padding:10px 18px;font-size:15px}
+
+  .hero-section{padding:22px 16px;border-radius:12px}
+  .hero-ctas{flex-direction:column;gap:12px}
+  .hero-ctas .btn{width:100%}
+
+  .info-cards{grid-template-columns:1fr}
+  .services-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+
+  .card{padding:18px}
+  .stat-card{padding:18px}
+
+  /* Footer compact layout */
+  .footer-content{grid-template-columns:1fr;gap:16px;padding:0 18px}
+  .footer-column{text-align:right}
+  .social-links a{max-width:100%}
+
+  /* Hide social labels to save space on very small screens */
+  @media (max-width:420px){
+    .social-links a .social-name{display:none}
+    .social-links a{justify-content:center}
+  }
+}
