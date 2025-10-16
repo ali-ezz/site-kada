@@ -161,7 +161,7 @@
     var footerRevealed = false;
     var fallbackTimeout = 12000; // 12s fallback
 
-    // reveal the footer early to improve perceived load speed (after 2s or when images ready)
+    // reveal the footer early to improve perceived load speed (soon after DOM ready or when a fraction of images load)
     function revealFooter(){
       if (footerRevealed) return;
       footerRevealed = true;
@@ -169,13 +169,16 @@
       if (!footer) return;
       footer.setAttribute('aria-hidden','false');
       footer.style.display = 'block';
-      footer.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+      // much snappier transition for perceived speed
+      footer.style.transition = 'opacity 0.16s ease, transform 0.16s ease';
       footer.style.opacity = '1';
       footer.style.transform = 'translateY(0)';
     }
 
-    var footerRevealTimeout = setTimeout(revealFooter, 2000);
+    // Reveal quickly (300ms) as a responsiveness improvement
+    var footerRevealTimeout = setTimeout(revealFooter, 300);
 
+    var revealThreshold = Math.max(1, Math.ceil(total * 0.25)); // reveal footer when 25% of images loaded (or at least 1)
     var checkInterval = setInterval(function(){
       var percent = (loaded/total) * 85; // images account for up to 85%
       // micro-progress towards 95% as time passes to avoid stalling UI
@@ -183,10 +186,14 @@
       var gentle = 85 + Math.round(timeElapsed * 10); // up to 95
       setFill(Math.min(percent, gentle));
 
-      if (loaded >= total) {
-        // images loaded; reveal footer and then wait for fonts before finalizing
+      // reveal early once threshold reached, or when all images are loaded
+      if (loaded >= revealThreshold) {
         clearTimeout(footerRevealTimeout);
         revealFooter();
+      }
+
+      if (loaded >= total) {
+        // images loaded; then wait for fonts before finalizing
         Promise.all([fontsReady]).then(function(){
           if (finished) return;
           finished = true;
