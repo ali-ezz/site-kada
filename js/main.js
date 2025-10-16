@@ -72,8 +72,8 @@
   // start RAF loop for smooth iris movement
   requestAnimationFrame(animateIris);
 
-    // start simulated loading progress (replace with real resource hooks if available)
-    startLoadingSimulation();
+  // start real loading monitor: wait for content images/fonts to load (with a fallback timeout)
+  startRealLoadingMonitor();
 
     // Note: outer white shape click pulled it out previously; that behavior is disabled
     // to avoid moving the background when the user clicks the eye.
@@ -118,30 +118,70 @@
     });
   }
 
-  function startLoadingSimulation(){
+  // Monitor real page resources (images within #content and document.fonts) and update the loader bar.
+  // Resolves when resources are ready or when the fallback timeout is reached.
+  function startRealLoadingMonitor(){
     var barFill = document.querySelector('.loader-bar-fill');
-    // simulate progress increments until 100 - make sure it reaches 100%
-    loadInterval = setInterval(function(){
-      if (loadProgress < 95) {
-        loadProgress += Math.max(1, Math.random()*3);
-      } else {
-        // slow down near the end to ensure smooth completion
-        loadProgress += 0.5;
+    var content = document.getElementById('content');
+
+    // collect images inside #content (if not found, fall back to all images)
+    var images = [];
+    if (content) images = Array.from(content.querySelectorAll('img'));
+    if (!images.length) images = Array.from(document.images || []);
+
+    var total = Math.max(1, images.length);
+    var loaded = 0;
+
+    function setFill(p){ if (barFill) barFill.style.width = Math.min(100, Math.round(p)) + '%'; }
+
+    // quick initial bump so the bar isn't empty immediately
+    setFill(6);
+
+    images.forEach(function(img){
+      if (img.complete && img.naturalWidth !== 0){
+        loaded++;
+        setFill((loaded/total) * 85);
+        return;
       }
-      
-      if (loadProgress >= 100) {
-        loadProgress = 100;
-        if (barFill) barFill.style.width = '100%';
-        clearInterval(loadInterval);
-        
-        // Wait to show the completed bar at 100%, then start the finish animation
-        setTimeout(function(){
-          finishLoading();
-        }, 1000);
-      } else {
-        if (barFill) barFill.style.width = loadProgress + '%';
+      img.addEventListener('load', function(){ loaded++; setFill((loaded/total) * 85); });
+      img.addEventListener('error', function(){ loaded++; setFill((loaded/total) * 85); });
+    });
+
+    // include font loading if available
+    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+
+    // watch progress and resolve when images are done and fonts ready, or on timeout
+    var finished = false;
+    var fallbackTimeout = 12000; // 12s fallback
+
+    var checkInterval = setInterval(function(){
+      var percent = (loaded/total) * 85; // images account for up to 85%
+      // micro-progress towards 95% as time passes to avoid stalling UI
+      var timeElapsed = Math.min(1, (Date.now() - startTime) / fallbackTimeout);
+      var gentle = 85 + Math.round(timeElapsed * 10); // up to 95
+      setFill(Math.min(percent, gentle));
+
+      if (loaded >= total) {
+        // images loaded; wait for fonts then finish
+        Promise.all([fontsReady]).then(function(){
+          if (finished) return;
+          finished = true;
+          clearInterval(checkInterval);
+          clearTimeout(fallback);
+          setFill(100);
+          setTimeout(finishLoading, 650);
+        });
       }
-    }, 100);
+    }, 150);
+
+    var startTime = Date.now();
+    var fallback = setTimeout(function(){
+      if (finished) return;
+      finished = true;
+      clearInterval(checkInterval);
+      setFill(100);
+      setTimeout(finishLoading, 700);
+    }, fallbackTimeout);
   }
 
   function runGSAPIntro(){
