@@ -33,7 +33,13 @@
   var showDebug = false;
   var debugLayer = null;
 
-  window.addEventListener('load', init);
+  // Initialize as soon as DOM is ready so the loader becomes the primary perceived loading UI
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // DOM already ready
+    setTimeout(init, 0);
+  } else {
+    window.addEventListener('DOMContentLoaded', init);
+  }
 
   function init(){
     eye = document.querySelector('.horus-eye');

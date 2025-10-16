@@ -4,6 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>معهد إعداد القادة - وزارة التعليم العالي والبحث العلمي</title>
+  <!-- Critical inline styles for loader: ensures loader appears immediately before external CSS is fetched -->
+  <style>
+    /* Minimal loader CSS to show bar and eye immediately */
+    #loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#E7B79B;z-index:9999}
+    .horus-eye{width:min(64vmin,520px);height:auto;display:flex;align-items:center;justify-content:center}
+    .horus-eye svg{width:100%;height:auto;display:block}
+    .loader-bar{position:fixed;left:50%;bottom:6vh;transform:translateX(-50%);width:60%;max-width:520px;height:12px;background:rgba(255,255,255,0.12);border-radius:99px;overflow:hidden}
+    .loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#ffd46a,#ff9a3d);transition:width .25s linear}
+  </style>
   <link rel="stylesheet" href="css/styles.css">
   <!-- GSAP CDN (paid license acknowledged) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js" defer></script>
