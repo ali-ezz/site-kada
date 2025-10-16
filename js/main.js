@@ -158,7 +158,23 @@
 
     // watch progress and resolve when images are done and fonts ready, or on timeout
     var finished = false;
+    var footerRevealed = false;
     var fallbackTimeout = 12000; // 12s fallback
+
+    // reveal the footer early to improve perceived load speed (after 2s or when images ready)
+    function revealFooter(){
+      if (footerRevealed) return;
+      footerRevealed = true;
+      var footer = document.querySelector('.site-footer');
+      if (!footer) return;
+      footer.setAttribute('aria-hidden','false');
+      footer.style.display = 'block';
+      footer.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+      footer.style.opacity = '1';
+      footer.style.transform = 'translateY(0)';
+    }
+
+    var footerRevealTimeout = setTimeout(revealFooter, 2000);
 
     var checkInterval = setInterval(function(){
       var percent = (loaded/total) * 85; // images account for up to 85%
@@ -168,7 +184,9 @@
       setFill(Math.min(percent, gentle));
 
       if (loaded >= total) {
-        // images loaded; wait for fonts then finish
+        // images loaded; reveal footer and then wait for fonts before finalizing
+        clearTimeout(footerRevealTimeout);
+        revealFooter();
         Promise.all([fontsReady]).then(function(){
           if (finished) return;
           finished = true;
@@ -185,6 +203,9 @@
       if (finished) return;
       finished = true;
       clearInterval(checkInterval);
+      clearTimeout(footerRevealTimeout);
+      // ensure footer visible even on timeout
+      revealFooter();
       setFill(100);
       setTimeout(finishLoading, 700);
     }, fallbackTimeout);
